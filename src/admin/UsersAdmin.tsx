@@ -35,7 +35,7 @@ type Range = "7D" | "30D" | "90D" | "12M";
 const RANGES: { id: Range; label: string; long: string; apiRange: string }[] = [
   { id: "7D", label: "7 days", long: "the last 7 days", apiRange: "7days" },
   { id: "30D", label: "30 days", long: "the last 30 days", apiRange: "30days" },
-  { id: "90D", label: "3 months", long: "the last 3 months", apiRange: "90days" },
+  { id: "90D", label: "3 months", long: "the last 3 months", apiRange: "3months" },
   { id: "12M", label: "12 months", long: "the last 12 months", apiRange: "12months" },
 ];
 
