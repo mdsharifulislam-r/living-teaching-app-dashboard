@@ -31,6 +31,7 @@ import {
 import { resolveFileUrl } from "../config";
 import { resolveAudioUrl } from "../config";
 import { uploadFileInChunks } from "../utils/upload";
+import { LanguageSwitcher } from "../i18n";
 
 type SectionId = "dashboard" | ContentKind | "notifications" | "users" | "comments" | "team" | "profile";
 
@@ -227,7 +228,10 @@ export function Admin({ onLogout }: { onLogout: () => Promise<void> }) {
             <Logo size={32} />
           </div>
           <h1 className="hidden text-[20px] font-bold tracking-tight lg:block">{current.label}</h1>
-          <AccountMenu onProfile={() => go("profile")} onLogout={onLogout} />
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <AccountMenu onProfile={() => go("profile")} onLogout={onLogout} />
+          </div>
         </header>
 
         {/* mobile section nav */}

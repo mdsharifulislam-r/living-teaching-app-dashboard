@@ -7,6 +7,7 @@ import { adminApi, useLoginAdminMutation, useLogoutAdminMutation } from "./api-c
 import { clearAuthToken, getAuthToken, setAuthToken, setStoredAdminProfile } from "./config";
 import { store } from "./reduxStore";
 import { type AdminRecord } from "./api-client";
+import { LanguageProvider, LanguageSwitcher } from "./i18n";
 
 function messageFrom(error: unknown, fallback: string) {
   if (!error || typeof error !== "object") return fallback;
@@ -73,7 +74,10 @@ function LoginPage({ onLogin, error, busy }: {
   };
 
   return (
-    <main className="grid min-h-dvh place-items-center bg-[#f1f5f3] px-4 py-10">
+    <main className="relative grid min-h-dvh place-items-center bg-[#f1f5f3] px-4 py-10">
+      <div className="absolute right-5 top-5">
+        <LanguageSwitcher />
+      </div>
       <section className="w-full max-w-md rounded-[28px] bg-white p-7 shadow-lift sm:p-9">
         <div className="mb-8">
           <div className="grid h-14 w-14 place-items-center rounded-2xl bg-brand-700 text-white shadow-soft">
@@ -181,8 +185,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <Provider store={store}>
-      <AppContent />
-    </Provider>
+    <LanguageProvider>
+      <Provider store={store}>
+        <AppContent />
+      </Provider>
+    </LanguageProvider>
   );
 }
