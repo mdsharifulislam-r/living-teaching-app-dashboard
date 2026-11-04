@@ -2,11 +2,21 @@ import { useRef, useState, type ReactNode } from "react";
 import { Camera, Check, Eye, EyeOff, KeyRound, Lock, Mail, Phone, ShieldCheck, Trash2, UserRound, X } from "lucide-react";
 import { CAPABILITIES, ROLES, roleCan } from "../data/team";
 import { prettyDate } from "../data/content";
+import { type AdminRecord, useUpdateCurrentAdminMutation } from "../api-client";
 import { useStore } from "../store";
 import { cn } from "../utils/cn";
 import { Avatar, cropSquare, inputCls } from "./shared";
 
 const emailOk = (e: string) => /^\S+@\S+\.\S+$/.test(e);
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (!error || typeof error !== "object") return fallback;
+  if ("data" in error && error.data && typeof error.data === "object" && "message" in error.data && typeof error.data.message === "string") {
+    return error.data.message;
+  }
+  if ("message" in error && typeof error.message === "string") return error.message;
+  return fallback;
+}
 
 function Card({ title, icon, children, sub }: { title: string; icon: ReactNode; children: ReactNode; sub?: string }) {
   return (
@@ -39,6 +49,8 @@ export function ProfileManager() {
   const [f, setF] = useState({ name: me.name, email: me.email, phone: me.phone ?? "", title: me.title ?? "", bio: me.bio ?? "", avatar: me.avatar });
   const [err, setErr] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [updateCurrentAdmin] = useUpdateCurrentAdminMutation();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const dirty =
@@ -46,15 +58,44 @@ export function ProfileManager() {
   const role = ROLES[me.role];
   const set = (p: Partial<typeof f>) => setF((x) => ({ ...x, ...p }));
 
-  const save = () => {
+  const save = async () => {
     const e: Record<string, string> = {};
     if (f.name.trim().length < 2) e.name = "Please enter your name";
     if (!emailOk(f.email.trim())) e.email = "Please enter a valid email";
     else if (team.some((m) => m.id !== me.id && m.email.toLowerCase() === f.email.trim().toLowerCase())) e.email = "Another team member already uses this email";
     setErr(e);
     if (Object.keys(e).length) return;
-    updateMember(me.id, { name: f.name.trim(), email: f.email.trim(), phone: f.phone.trim() || undefined, title: f.title.trim() || undefined, bio: f.bio.trim() || undefined, avatar: f.avatar });
-    showToast("Profile updated");
+    const changes = {
+      name: f.name.trim(),
+      email: f.email.trim(),
+      phone: f.phone.trim() || undefined,
+      title: f.title.trim() || undefined,
+      bio: f.bio.trim() || undefined,
+      avatar: f.avatar,
+    };
+    if (!hasBackendAdmin) {
+      updateMember(me.id, changes);
+      showToast("Profile updated");
+      return;
+    }
+
+    const body: Partial<AdminRecord> = {
+      name: changes.name,
+      email: changes.email,
+      phone: f.phone.trim(),
+      title: f.title.trim(),
+      bio: f.bio.trim(),
+      image: f.avatar ?? "",
+    };
+    setSaving(true);
+    try {
+      await updateCurrentAdmin(body).unwrap();
+      showToast("Profile updated");
+    } catch (error) {
+      showToast(getErrorMessage(error, "Could not update profile"));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -155,10 +196,10 @@ export function ProfileManager() {
           )}
           <button
             onClick={save}
-            disabled={!dirty}
+            disabled={!dirty || saving || busy}
             className="flex items-center gap-2 rounded-full bg-brand-700 px-7 py-3 text-[14.5px] font-bold text-white shadow-soft transition enabled:hover:bg-brand-800 enabled:active:scale-95 disabled:cursor-not-allowed disabled:opacity-45"
           >
-            <Check size={17} /> Save changes
+            <Check size={17} /> {saving ? "Saving…" : "Save changes"}
           </button>
         </div>
       </Card>

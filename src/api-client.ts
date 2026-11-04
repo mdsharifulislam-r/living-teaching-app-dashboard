@@ -10,6 +10,9 @@ export interface AdminRecord {
   role?: string;
   subrole?: string;
   image?: string;
+  title?: string;
+  phone?: string;
+  bio?: string;
   permissions?: string[];
   isSuperAdmin?: boolean;
   superAdmin?: boolean;
@@ -257,6 +260,14 @@ export const adminApi = createApi({
       transformResponse: unwrapAdminRecord,
       providesTags: ["Admin"],
     }),
+    updateCurrentAdmin: builder.mutation<ApiEnvelope, Partial<AdminRecord>>({
+      query: (body) => ({
+        url: "/user/profile",
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["Admin"],
+    }),
     getAdmins: builder.query<AdminListResponse, { page?: number; limit?: number } | void>({
       query: (params) => ({
         url: "/admin",
@@ -482,6 +493,7 @@ export const {
   useGetAdminsQuery,
   useGetAdminByIdQuery,
   useGetCurrentAdminQuery,
+  useUpdateCurrentAdminMutation,
   useLoginAdminMutation,
   useLogoutAdminMutation,
   useCreateAdminMutation,
